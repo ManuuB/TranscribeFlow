@@ -1,0 +1,377 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="dashboard-body">
+
+    <div class="dashboard-card">
+
+        <h2>🎵 Audio Processing Dashboard</h2>
+
+        <div class="section">
+            <h3>Upload Audio File</h3>
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="audio" accept=".mp3,.wav" required>
+                <button type="submit">Upload & Process</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h3>🎤 Live Audio Recording</h3>
+
+            <button type="button" onclick="startRecording()" class="record-btn">Start Recording</button>
+            <button type="button" onclick="stopRecording()" class="stop-btn">Stop Recording</button>
+
+            <p id="status"></p>
+
+            <form id="liveForm" method="POST" action="/live_upload">
+                <input type="hidden" name="audio_data" id="audio_data">
+            </form>
+        </div>
+
+        <a href="/logout" class="logout-btn">Logout</a>
+
+    </div>
+
+<script>
+let mediaRecorder;
+let audioChunks = [];
+
+async function startRecording() {
+    audioChunks = [];
+    document.getElementById("status").innerText = "Recording...";
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.start();
+
+    mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+    };
+}
+
+function stopRecording() {
+    mediaRecorder.stop();
+    document.getElementById("status").innerText = "Processing...";
+
+    mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const reader = new FileReader();
+
+        reader.readAsDataURL(audioBlob);
+
+        reader.onloadend = function() {
+            document.getElementById("audio_data").value = reader.result;
+            document.getElementById("liveForm").submit();
+        }
+    };
+}
+</script>
+
+</body>
+</html> -->
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <title>TranscribeFlow Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="navbar">
+    <div class="logo">
+        <h2>🎙 TranscribeFlow</h2>
+    </div>
+    <a href="/logout" class="logout-btn">Logout</a>
+</div>
+
+<div class="main">
+
+    <div class="glass-card">
+
+        <h1>AI Audio Processor</h1>
+        <p class="subtitle">Upload or Record audio to generate transcription & summary</p>
+
+        <div class="section">
+
+            <h3>📁 Upload Audio</h3>
+
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="audio" accept=".mp3,.wav" required>
+                <button type="submit" class="primary-btn">
+                    Transcribe & Summarize
+                </button>
+            </form>
+
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section">
+
+            <h3>🎤 Live Recording</h3>
+
+            <div class="record-controls">
+                <button onclick="startRecording()" class="record-btn">
+                    ⏺ Start
+                </button>
+
+                <button onclick="stopRecording()" class="stop-btn">
+                    ⏹ Stop
+                </button>
+            </div>
+
+            <p id="status">Not recording</p>
+
+            <form id="liveForm" method="POST" action="/live_upload">
+                <input type="hidden" name="audio_data" id="audio_data">
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+let mediaRecorder;
+let audioChunks = [];
+
+async function startRecording() {
+    audioChunks = [];
+    document.getElementById("status").innerText = "🔴 Recording...";
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start();
+
+    mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+    };
+}
+
+function stopRecording() {
+    if (!mediaRecorder) return;
+
+    mediaRecorder.stop();
+    document.getElementById("status").innerText = "⏳ Processing...";
+
+    mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const reader = new FileReader();
+
+        reader.readAsDataURL(audioBlob);
+
+        reader.onloadend = function() {
+            document.getElementById("audio_data").value = reader.result;
+            document.getElementById("liveForm").submit();
+        };
+    };
+}
+</script>
+
+</body>
+</html> -->
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <title>TranscribeFlow Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="topbar">
+    <div class="brand">🎙 TranscribeFlow</div>
+    <div class="user-area">
+        <span>Welcome, {{ session['user'] }}</span>
+        <a href="/logout" class="logout-btn">Logout</a>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="dashboard-card">
+
+        <h1>Audio Processing Dashboard</h1>
+        <p class="desc">Upload or record audio to generate transcription and summary.</p>
+
+        <div class="box">
+            <h3>Upload Audio File</h3>
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="audio" accept=".mp3,.wav" required>
+                <button type="submit" class="primary-btn">
+                    Process Audio
+                </button>
+            </form>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="box">
+            <h3>Live Recording</h3>
+
+            <div class="buttons">
+                <button onclick="startRecording()" class="record-btn">
+                    Start Recording
+                </button>
+
+                <button onclick="stopRecording()" class="stop-btn">
+                    Stop Recording
+                </button>
+            </div>
+
+            <p id="status">Not recording</p>
+
+            <form id="liveForm" method="POST" action="/live_upload">
+                <input type="hidden" name="audio_data" id="audio_data">
+            </form>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+let mediaRecorder;
+let audioChunks = [];
+
+async function startRecording() {
+    audioChunks = [];
+    document.getElementById("status").innerText = "Recording...";
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start();
+
+    mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+    };
+}
+
+function stopRecording() {
+    if (!mediaRecorder) return;
+
+    mediaRecorder.stop();
+    document.getElementById("status").innerText = "Processing...";
+
+    mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const reader = new FileReader();
+
+        reader.readAsDataURL(audioBlob);
+
+        reader.onloadend = function() {
+            document.getElementById("audio_data").value = reader.result;
+            document.getElementById("liveForm").submit();
+        };
+    };
+}
+</script>
+
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TranscribeFlow Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">🎙 TranscribeFlow</div>
+    <div class="right">
+        <span class="welcome">Welcome, {{ session['user'] }}</span>
+        <a href="/logout" class="logout-btn">Logout</a>
+    </div>
+</div>
+
+<div class="main-wrapper">
+
+    <div class="dashboard-card">
+
+        <h1>AI Audio Transcription & Summary</h1>
+        <p class="subtitle">Upload or record audio to generate intelligent text output.</p>
+
+        <!-- Upload Section -->
+        <div class="section">
+            <h3>📁 Upload Audio</h3>
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="audio" accept=".mp3,.wav" required>
+                <button type="submit" class="btn primary">
+                    Transcribe & Summarize
+                </button>
+            </form>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Live Recording Section -->
+        <div class="section">
+            <h3>🎤 Live Recording</h3>
+
+            <div class="record-buttons">
+                <button onclick="startRecording()" class="btn success">
+                    Start Recording
+                </button>
+
+                <button onclick="stopRecording()" class="btn danger">
+                    Stop Recording
+                </button>
+            </div>
+
+            <p id="status">Not recording</p>
+
+            <form id="liveForm" method="POST" action="/live_upload">
+                <input type="hidden" name="audio_data" id="audio_data">
+            </form>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+let mediaRecorder;
+let audioChunks = [];
+
+async function startRecording() {
+    audioChunks = [];
+    document.getElementById("status").innerText = "🔴 Recording...";
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start();
+
+    mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+    };
+}
+
+function stopRecording() {
+    if (!mediaRecorder) return;
+
+    mediaRecorder.stop();
+    document.getElementById("status").innerText = "⏳ Processing...";
+
+    mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const reader = new FileReader();
+
+        reader.readAsDataURL(audioBlob);
+
+        reader.onloadend = function() {
+            document.getElementById("audio_data").value = reader.result;
+            document.getElementById("liveForm").submit();
+        };
+    };
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h2>Processing Result</h2>
+
+    <h3>Transcription</h3>
+    <div class="output-box">
+        {{ transcription }}
+    </div>
+
+    <h3>Summary</h3>
+    <div class="output-box">
+        {{ summary }}
+    </div>
+
+    <form action="/download" method="POST">
+        <input type="hidden" name="transcription" value="{{ transcription }}">
+        <input type="hidden" name="summary" value="{{ summary }}">
+        <button type="submit">Download Result</button>
+    </form>
+
+    <br>
+    <a href="/dashboard">Back to Dashboard</a>
+</div>
+
+</body>
+</html>
