@@ -2,23 +2,21 @@
 <html>
 <head>
     <title>Result</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
 
 <div class="container">
-    <h2>Processing Result</h2>
 
-    <h3>Transcription</h3>
-    <div class="output-box">
-        {{ transcription }}
-    </div>
+    <h2>Transcription</h2>
+    <textarea rows="8" cols="80" readonly>{{ transcription }}</textarea>
 
-    <h3>Summary</h3>
-    <div class="output-box">
-        {{ summary }}
-    </div>
+    <h2>Summary</h2>
+    <textarea rows="5" cols="80" readonly>{{ summary }}</textarea>
 
+    <br><br>
+
+    <!-- DOWNLOAD TXT -->
     <form action="/download" method="POST">
         <input type="hidden" name="transcription" value="{{ transcription }}">
         <input type="hidden" name="summary" value="{{ summary }}">
@@ -26,7 +24,28 @@
     </form>
 
     <br>
+
+    <!-- DOWNLOAD JSON -->
+    <form action="/download_json" method="POST">
+        <input type="hidden" name="transcription" value="{{ transcription }}">
+        <input type="hidden" name="summary" value="{{ summary }}">
+        <button type="submit">Download JSON</button>
+    </form>
+
+    <br><br>
+
+    <!-- AUDIO PLAYER (ONLY ONCE ✅) -->
+    {% if audio_file %}
+    <h3>Play Audio</h3>
+    <audio controls>
+        <source src="{{ url_for('uploaded_file', filename=audio_file) }}">
+    </audio>
+    {% endif %}
+
+    <br><br>
+
     <a href="/dashboard">Back to Dashboard</a>
+
 </div>
 
 </body>
