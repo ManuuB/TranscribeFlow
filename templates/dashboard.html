@@ -3,7 +3,6 @@
 <head>
     <title>TranscribeFlow Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    
 </head>
 <body>
 
@@ -21,20 +20,22 @@
 
         <h1>AI Audio Transcription & Summary</h1>
         <p class="subtitle">Upload or record audio to generate intelligent text output.</p>
-        <!-- <a href="/history">
-    <button class="btn primary" style="margin-bottom:15px;">
-        📄 View History
-    </button>
-</a> -->
+
         <!-- Upload Section -->
         <div class="section">
             <h3>📁 Upload Audio</h3>
+
             <form action="/upload" method="post" enctype="multipart/form-data">
-                <input type="file" name="audio" accept=".mp3,.wav" required>
+                <input type="file" name="audio" accept=".mp3,.wav,.m4a,.webm" required>
+
                 <button type="submit" class="btn primary">
                     Transcribe & Summarize
                 </button>
             </form>
+
+            <p style="margin-top:10px; font-size:14px; color:gray;">
+                Supported formats: MP3, WAV, M4A, WEBM
+            </p>
         </div>
 
         <div class="divider"></div>
@@ -44,11 +45,11 @@
             <h3>🎤 Live Recording</h3>
 
             <div class="record-buttons">
-                <button onclick="startRecording()" class="btn success">
+                <button type="button" onclick="startRecording()" class="btn success">
                     Start Recording
                 </button>
 
-                <button onclick="stopRecording()" class="btn danger">
+                <button type="button" onclick="stopRecording()" class="btn danger">
                     Stop Recording
                 </button>
             </div>
@@ -59,16 +60,19 @@
                 <input type="hidden" name="audio_data" id="audio_data">
             </form>
         </div>
+
+        <div class="divider"></div>
+
+        <!-- History Button -->
         <a href="/history">
-    <button class="btn primary" style="margin-bottom:15px;">
-        📄 View History
-    </button>
-</a>
+            <button type="button" class="btn primary" style="margin-top:15px;">
+                📄 View History
+            </button>
+        </a>
+
     </div>
 
 </div>
-
-
 
 <script>
 let mediaRecorder;
@@ -88,14 +92,13 @@ async function startRecording() {
         audioChunks.push(event.data);
     };
 
-    // Auto stop after 5 minutes (good for long paragraphs)
+    // Auto stop after 5 minutes
     setTimeout(() => {
-        if(mediaRecorder && mediaRecorder.state === "recording"){
+        if (mediaRecorder && mediaRecorder.state === "recording") {
             stopRecording();
         }
-    }, 300000);  // 5 minutes
+    }, 300000);
 }
-
 
 function stopRecording() {
 
@@ -111,17 +114,15 @@ function stopRecording() {
         const reader = new FileReader();
         reader.readAsDataURL(audioBlob);
 
-        reader.onloadend = function() {
+        reader.onloadend = function () {
 
             document.getElementById("audio_data").value = reader.result;
             document.getElementById("liveForm").submit();
-            
 
         };
     };
 }
 </script>
-
 
 </body>
 </html>
