@@ -19,8 +19,6 @@ db = mysql.connector.connect(
     password="Mansi@123",
     database="audio_processing_system"
 )
-
-#cursor = db.cursor()
 cursor = db.cursor(dictionary=True)
 
 # ---------------- FIX SSL ---------------- #
@@ -53,13 +51,13 @@ USERNAME = "mansi"
 PASSWORD = "1234"
 
 @app.route("/")
-def login():
+def home():
     return render_template("login.html")
 
 @app.route("/login", methods=["POST"])
-def do_login():
-    username = request.form["username"]
-    password = request.form["password"]
+def login():
+    username = request.form.get("username")
+    password = request.form.get("password")
 
     if username == USERNAME and password == PASSWORD:
         session["user"] = username
@@ -70,50 +68,13 @@ def do_login():
 @app.route("/dashboard")
 def dashboard():
     if "user" in session:
-        return render_template("dashboard.html")
-    return redirect(url_for("login"))
-    from flask import Flask, render_template, request, redirect, url_for, session
+        return render_template("dashboard.html", user=session["user"])
+    return redirect(url_for("home"))
 
-app = Flask(__name__)
-app.secret_key = "secret123"
-
-# Home Page (Login)
-@app.route('/')
-def home():
-    return render_template("login.html")
-
-# Login Route
-@app.route('/login', methods=['POST'])
-def login():
-    username = request.form.get('username')
-    password = request.form.get('password')
-
-    # Validation
-    if not username or not password:
-        return "Please fill all fields!"
-
-    if len(username) < 3 or len(password) < 3:
-        return "Username & Password must be at least 3 characters!"
-
-    # Allow any user
-    session['user'] = username
-    return redirect(url_for('dashboard'))
-
-# Dashboard
-@app.route('/dashboard')
-def dashboard():
-    if 'user' in session:
-        return render_template("dashboard.html", user=session['user'])
-    return redirect(url_for('home'))
-
-# Logout
-@app.route('/logout')
+@app.route("/logout")
 def logout():
-    session.pop('user', None)
-    return redirect(url_for('home'))
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    session.pop("user", None)
+    return redirect(url_for("home"))
 
 # ---------------- SERVE AUDIO ---------------- #
 @app.route("/uploads/<filename>")
@@ -124,9 +85,9 @@ def uploaded_file(filename):
 @app.route("/upload", methods=["POST"])
 def upload():
     if "user" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("home"))
 
-    file = request.files["audio"]
+    file = request.files.get("audio")
 
     if file:
         filepath = os.path.join(UPLOAD_FOLDER, file.filename)
@@ -141,40 +102,26 @@ def upload():
         summarizer = TextRankSummarizer()
         summary_sentences = summarizer(parser.document, 3)
 
-        summary_text = ""
-        for sentence in summary_sentences:
-            summary_text += str(sentence) + " "
+        summary_text = " ".join(str(sentence) for sentence in summary_sentences)
 
-        # 🔹 SAVE TO DATABASE ✅
-        filename = file.filename
-
+        # 🔹 SAVE TO DATABASE
         query = "INSERT INTO results (filename, transcription, summary) VALUES (%s, %s, %s)"
-        values = (filename, transcription, summary_text)
-
+        values = (file.filename, transcription, summary_text)
         cursor.execute(query, values)
         db.commit()
-
-        # 🔹 SAVE TXT FILE (optional)
-        now = datetime.now().strftime("%Y%m%d_%H%M%S")
-        save_path = os.path.join(SAVE_FOLDER, f"result_{now}.txt")
-
-        with open(save_path, "w", encoding="utf-8") as f:
-            f.write("TRANSCRIPTION:\n")
-            f.write(transcription + "\n\n")
-            f.write("SUMMARY:\n")
-            f.write(summary_text)
 
         return render_template("result.html",
                                transcription=transcription,
                                summary=summary_text,
-                               audio_file=filename)
+                               audio_file=file.filename)
 
     return "No file uploaded"
 
+# ---------------- HISTORY ---------------- #
 @app.route("/history")
 def history():
     if "user" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("home"))
 
     cursor.execute("SELECT * FROM results ORDER BY id DESC")
     data = cursor.fetchall()
@@ -185,10 +132,9 @@ def history():
 @app.route("/live_upload", methods=["POST"])
 def live_upload():
     if "user" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("home"))
 
     audio_data = request.form["audio_data"]
-
     header, encoded = audio_data.split(",", 1)
     audio_bytes = base64.b64decode(encoded)
 
@@ -198,32 +144,22 @@ def live_upload():
     with open(filepath, "wb") as f:
         f.write(audio_bytes)
 
-    # 🔹 Transcription
     result = whisper_model.transcribe(filepath, fp16=False)
     transcription = result["text"]
 
-    # 🔹 Summarization
     parser = PlaintextParser.from_string(transcription, Tokenizer("english"))
     summarizer = TextRankSummarizer()
-    summary_sentences = summarizer(parser.document, 3)
-
-    summary_text = ""
-    for sentence in summary_sentences:
-        summary_text += str(sentence) + " "
-
-    # 🔹 SAVE TO DATABASE ✅
-    filename = os.path.basename(filepath)
+    summary_text = " ".join(str(s) for s in summarizer(parser.document, 3))
 
     query = "INSERT INTO results (filename, transcription, summary) VALUES (%s, %s, %s)"
-    values = (filename, transcription, summary_text)
-
+    values = (os.path.basename(filepath), transcription, summary_text)
     cursor.execute(query, values)
     db.commit()
 
     return render_template("result.html",
                            transcription=transcription,
                            summary=summary_text,
-                           audio_file=filename)
+                           audio_file=os.path.basename(filepath))
 
 # ---------------- DOWNLOAD TXT ---------------- #
 @app.route("/download", methods=["POST"])
@@ -231,7 +167,7 @@ def download():
     transcription = request.form["transcription"]
     summary = request.form["summary"]
 
-    content = "TRANSCRIPTION:\n\n" + transcription + "\n\nSUMMARY:\n\n" + summary
+    content = f"TRANSCRIPTION:\n\n{transcription}\n\nSUMMARY:\n\n{summary}"
 
     file = io.BytesIO()
     file.write(content.encode("utf-8"))
@@ -245,30 +181,19 @@ def download():
 # ---------------- DOWNLOAD JSON ---------------- #
 @app.route("/download_json", methods=["POST"])
 def download_json():
-    transcription = request.form["transcription"]
-    summary = request.form["summary"]
-
     data = {
-        "transcription": transcription,
-        "summary": summary
+        "transcription": request.form["transcription"],
+        "summary": request.form["summary"]
     }
 
-    json_data = json.dumps(data, indent=4)
-
     file = io.BytesIO()
-    file.write(json_data.encode("utf-8"))
+    file.write(json.dumps(data, indent=4).encode("utf-8"))
     file.seek(0)
 
     return send_file(file,
                      as_attachment=True,
                      download_name="result.json",
                      mimetype="application/json")
-
-# ---------------- LOGOUT ---------------- #
-@app.route("/logout")
-def logout():
-    session.pop("user", None)
-    return redirect(url_for("login"))
 
 # ---------------- RUN ---------------- #
 if __name__ == "__main__":
